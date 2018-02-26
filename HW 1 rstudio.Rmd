@@ -1,0 +1,188 @@
+---
+title: "hw1_Evans"
+author: "Tessa Devereaux Evans"
+date: "21 February 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library (ggplot2)
+library (dplyr)
+library (tidyr)
+```
+
+
+question 1
+```{r}
+democracy <- read.csv("democracy.csv", stringsAsFactors = FALSE, na.strings=".")
+```
+
+question 2
+```{r}
+#Section 2 - Initial data exploration
+hist(democracy$POLLIB)
+hist(democracy$GDPW, 
+     main="Histogram for GDP per capita",
+     xlab="GDP per capita",
+     border="black",
+     col="light yellow")
+     
+```
+
+```{r}
+
+hist (log10(democracy$GDPW),
+     main="Histogram for log GDP per capita",
+     xlab="log GDP per capita",
+     border="black",
+     col = "light pink")
+     
+```
+
+This histogram uses a log transformation to make a skewed distribution less skewed. This can be valuable for making patterns in the data more interpretable and helping to meet the assumptions of inferential statistics. 
+
+
+Question 3
+
+
+
+
+Create a scatterplot of political liberties against GDP per capita.
+
+When there is a lot of overlap in a scatter plot it is useful to “jitter” the points 
+
+Create a scatterplot of political liberties against log GDP per capita. Jitter the points. How is the relationship different than when GDP per capita was not logged.
+
+Create a boxplot of GDP per capita for oil producing and non-oil producing nations.
+
+```{r}
+ggplot(democracy, aes(x=democracy$GDPW, y=democracy$POLLIB)) +
+  geom_point()+
+  labs(title = "Civil Liberties and GDP")
+
+ggplot(democracy, aes(x = GDPW ,y = POLLIB)) +
+geom_jitter(alpha =.1) +
+labs(title = "Political Liberties and GDP", y="Political Liberties", x ="GDP per Cap")
+
+```
+
+```{r}
+ggplot(democracy, aes(x=log10(democracy$GDPW), y=democracy$POLLIB)) +
+  geom_jitter(alpha=.1)+
+  theme_bw()
+  labs(title = "Jitter Scatterplot of Political Liberties and Log GDP per Capita")
+```
+  
+  The Logged Scatterplot is more spread out so you can see the relationship more clearly
+  
+  
+  
+```{r}  
+  
+boxplot(democracy$GDPW~democracy$OIL,data=democracy, main="Boxplot of Oil and GDPW", xlab="Oil Producing Countries", ylab="GDPW")
+  geom_jitter(alpha=.1)+
+  theme_bw()
+
+```
+
+###Section 4 - Transform data and analyse
+
+1 - Calculate the mean GDP per capita in countries with at least 40 percent Catholics. How does it compare to mean GDP per capita for all countries?
+
+The Catholic mean is higher 
+
+```{r}
+mean(democracy$GDPW)
+catholic_gdpw <-filter(democracy, CATH >= .4)$GDPW %>% mean(na.rm = TRUE)
+catholic_gdpw
+```
+
+2 - Calculate the average GDP per capita in countries with greater than 60% ethnolinguistic fractionalization, less than 60%, and missing ethnolinguistic fractionalization.
+
+```{r}
+ethno_gdpw <-filter(democracy, ELF60 > .6)$GDPW %>% mean(na.rm = TRUE)
+ethno_gdpw
+
+ethno_gdpw <-filter(democracy, ELF60 < .6)$GDPW %>% mean(na.rm = TRUE)
+ethno_gdpw
+
+ethno_gdpw <-filter(democracy, is.na(ELF60))$GDPW %>% mean(na.rm = TRUE)
+ethno_gdpw
+
+```
+
+3. What was the median of the average years of education in 1985 for all countries?
+
+Answer is 5.625 years
+
+```{r}
+
+democracy_median_1985 <- filter(democracy, YEAR==1985)
+summary(democracy_median_1985$EDT)
+
+
+```
+
+
+
+4. Which country was (or countries were) closest to the median years of education in 1985 among all countries?
+
+Answer is Venezuela 
+
+```{r}
+
+which.min(abs(democracy_median_1985$EDT-5.625))
+
+filter (democracy_median_1985, row_number()==77L)
+
+
+
+```
+
+
+
+5. What was the median of the average years of education in 1985 for democracies?
+
+Answer is 7.805 
+
+```{r}
+
+democracy_1985_democracy <- filter(democracy, YEAR==1985, REG==1)
+summary(democracy_1985_democracy$EDT)
+
+```
+
+
+6. Which democracy was (or democracies were) closest to the median years of education in 1985 among all democracies?
+
+Answer is Maritius 
+
+
+```{r}
+
+which.min(abs(democracy_1985_democracy$EDT-7.805))
+filter (democracy_1985_democracy, row_number()==1)
+
+```
+
+
+7. What were the 25th and 75th percentiles of ethnolinguistic fractionalization for new and old countries?
+
+
+```{r}
+quantile(democracy$ELF60, na.rm = TRUE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

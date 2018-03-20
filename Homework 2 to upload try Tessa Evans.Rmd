@@ -1,0 +1,283 @@
+---
+title: "hw2_Evans"
+author: "TDE"
+date: "14 March 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library (ggplot2)
+library (dplyr)
+library (tidyr)
+```
+SECTION 1: 
+Matrix Form
+
+##Section 1
+
+#### In R, Create a matrix X comprised of three columns: a column of ones, a column made of the variable year, and a column made up of the variable women.
+
+```{r}
+sprinters <- read.csv("sprinters.csv", 
+             stringsAsFactors = FALSE, 
+             na.strings = ("."))
+```
+
+```{r}
+a <- matrix(1, nrow=42)
+b <- matrix(sprinters$year)
+c <- matrix(sprinters$women)
+X = cbind(a, b, c)
+X
+```
+
+#### Create a matrix y comprised of a single column, made up of the variable finish.
+
+```{r}
+Y <- matrix(sprinters$finish)
+Y
+```
+
+
+#### Compute the following using R’s matrix commands (note that you will need to use the matrix multiplication operator `%*%`):
+
+$$b=(X′X)^{-1}X′y$$
+
+```{r}
+xder <- t(X)
+xder
+
+xderx <- t(X)%*%X
+xderx
+
+inverse <- solve(xderx)
+inverse
+
+b <- inverse%*%xder%*%Y
+
+```
+
+####Report the result of this calculation.
+
+```{r}
+b
+```
+
+1 is intercept 
+2 is  slope year 
+3 is  slope women 
+
+
+##SECTION 2 
+
+####Using the function `lm`, run a regression of `finish` on `year` and `women`.
+
+```{r}
+
+modelA <- lm(sprinters$finish ~ sprinters$year + sprinters$women, data = sprinters, x=TRUE)
+modelA
+```
+
+####Compare the results the calculation you did in Section 1.
+
+The answer for the equation in Section 1(34.96003685) is extremely close to the result of the regression (34.96004).
+
+####Make a nice plot summarizing this regression. On a single graph, plot the data and the regression line. Make sure the graph is labeled nicely, so that anyone who does not know your variable names could still read it.
+
+```{r, warning=FALSE}
+
+ggplot(sprinters, aes(x = year+women, y = finish)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")+ ggtitle("Best Olympic Time in Meter Sprint by Year") + labs(y= "Best Time in Seconds in the Meter Sprint", x = "Year of Competition by Sex") + scale_fill_continuous(name = "women", labels=c("women", "men"))+scale_color_continuous(name="women", labels=c("women", "men"))+theme_gray()
+```
+
+
+
+####Rerun the regression, adding an interaction between `women` and `year`.
+
+```{r}
+ModelB <- lm(sprinters$finish ~ sprinters$year + sprinters$women + sprinters$year:sprinters$women, data = sprinters, x=TRUE)
+ModelB
+```
+
+####Redo the plot with a new fit, one for each level of `women`.
+
+```{r}
+ggplot(ModelB, aes(x = sprinters$year, y = sprinters$finish, 
+                         ymin = 9, ymax = 13,
+                         color = factor(sprinters$women),
+                         fill = factor(sprinters$women))) +
+  geom_line() + geom_point() +
+  labs(title = "Best Olympic Time in Meter Sprint by Year",
+       y = "Best Time in Seconds in the Meter Sprint",
+       x = "Year") + 
+  scale_fill_discrete(name = "Sex",
+                      labels=c("Men","Women")) +
+  scale_color_discrete(name = "Sex",
+                      labels=c("Men","Women")) +
+  theme_bw()
+```
+
+
+
+
+
+
+##SECTION 3:
+
+####Suppose that an Olympics had been held in 2001. Use the predict function to calculate the expected finishing time for men and for women.
+
+```{r}
+
+NEWNEWMEN2001 <-lm(finish ~ women + year + women:year , data =sprinters) 
+
+summary(NEWNEWMEN2001)
+
+model <-data.frame(year = 2001, women = 0)
+
+predict(NEWNEWMEN2001, model, interval = 'confidence')
+
+```
+
+##predicted value is 9.804324
+
+
+```{r}
+
+NEWNEWWOMEN2001 <-lm(finish ~ women + year + women:year , data =sprinters) 
+
+summary(NEWNEWWOMEN2001)
+
+model <-data.frame(year = 2001, women = 1)
+
+predict(NEWNEWWOMEN2001, model, interval = 'confidence')
+
+```
+
+
+## predicted value 10.68609 
+
+
+####The authors of the Nature article were interested in predicting the finishing times for the 2156 Olympics. Use `predict` to do so, for both men and women, and report 95% confidence intervals for your results.
+
+```{r}
+
+WOMEN2156 <-lm(finish ~ women + year + women:year , data =sprinters) 
+
+summary(WOMEN2156)
+
+model <-data.frame(year = 2156, women = 1)
+
+predict(WOMEN2156, model, interval = 'confidence')
+
+```
+
+## Prediction is 8.078666 seconds 
+
+Confidence interval is 
+
+
+```{r}
+
+MEN2156 <-lm(finish ~ women + year + women:year , data =sprinters) 
+
+summary(MEN2156)
+
+model <-data.frame(year = 2156, women = 0)
+
+predict(MEN2156, model, interval = 'confidence')
+
+```
+## Prediction is 8.078666 seconds 
+
+
+
+####Do you trust the model’s predictions? Is there reason to trust the 2001 prediction more than the 2156 prediction?
+
+
+#It is not trustworthy because it is assumed the trend will be unbroken into the future, without any observations to support a continuation of that relationship. The 2001 prediction, by comparison, comports with our overall understanding of the relationship based on the data available. 
+
+####Is any assumption of the model being abused or overworked to make this prediction?
+
+##Assumes people will continue to get faster 
+
+#Problem 2 
+
+```{r}
+data("anscombe")
+
+library("tidyverse")
+anscombe2 <- anscombe %>%
+    mutate(obs = row_number()) %>%
+    gather(variable_dataset, value, - obs) %>%
+    separate(variable_dataset, c("variable", "dataset"), sep = 1L) %>%
+    spread(variable, value) %>%
+    arrange(dataset, obs)
+```
+
+##Section 4
+
+####For each dataset: calculate the mean and standard deviations of x and y, and correlation between x and y.
+
+```{r}
+anscombe_dataset1 <-filter(anscombe2, anscombe2$dataset==1)
+
+anscombe_dataset2 <-filter(anscombe2, anscombe2$dataset==2)
+  
+anscombe_dataset3 <-filter(anscombe2, anscombe2$dataset==3)
+  
+anscombe_dataset4 <-filter(anscombe2, anscombe2$dataset==4)
+
+summary(anscombe_dataset1$x)
+summary(anscombe_dataset2$x)
+summary(anscombe_dataset3$x)
+summary(anscombe_dataset4$x)
+summary(anscombe_dataset1$y)
+summary(anscombe_dataset2$y)
+summary(anscombe_dataset3$y)
+summary(anscombe_dataset4$y)
+
+cor(anscombe_dataset1$x, anscombe_dataset1$y)
+cor(anscombe_dataset2$x, anscombe_dataset2$y)
+cor(anscombe_dataset3$x, anscombe_dataset3$y)
+cor(anscombe_dataset4$x, anscombe_dataset4$y)
+
+
+```
+
+####Run a linear regression between x and y for each dataset.
+
+```{r}
+
+lm(anscombe_dataset1$y ~ anscombe_dataset1$x)
+lm(anscombe_dataset2$y ~ anscombe_dataset2$x)
+lm(anscombe_dataset3$y ~ anscombe_dataset3$x)
+lm(anscombe_dataset4$y ~ anscombe_dataset4$x)
+
+```
+
+####How similar do you think that these datasets will look?
+
+
+#### The mean, standard deviation, and correlations are quite similar, as are the regression coefficients. However, the residuals imply the data will not be arranged in a uniform pattern and it is hard to say how the data will look.
+
+
+
+
+####Create a scatter plot of each dataset and its linear regression fit. Hint: you can do this easily with `facet_wrap`.
+
+```{r}
+scatter_anscombe <- ggplot (anscombe2, aes(x, y))
+scatter_anscombe + geom_point() + facet_wrap(~dataset)
+ 
+```
+
+####How do we make sense of these plots?
+
+#Plots 1&3 are the closest linear relationship. The first plot essentially has no outliers, while the third has one. Based on the observations in the second plot, it seems the relationship isn't linear but is curvilinear. Finally, it seems there is a relationship between x and y for Plot 4. 
+
+
+
+
+
